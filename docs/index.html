@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HarmonyOS NPU 统一接入方案</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css" />
+    <style>
+      :root { --theme-color: #1677ff; }
+      .sidebar { padding-top: 18px; }
+      .sidebar-nav > ul > li > p { font-weight: 700; color: #111827; }
+      .markdown-section { max-width: 1080px; }
+      .markdown-section h1 { border-bottom: 3px solid #1677ff; padding-bottom: 14px; }
+      .markdown-section h2 { margin-top: 42px; border-bottom: 1px solid #d7dce3; padding-bottom: 8px; }
+      .markdown-section table { display: table; width: 100%; }
+      .markdown-section pre { border-left: 4px solid #1677ff; }
+    </style>
+  </head>
+  <body>
+    <div id="app">加载文档中...</div>
+    <script>
+      window.$docsify = {
+        name: "HarmonyOS NPU 统一接入方案",
+        repo: "https://github.com/panqiangbiao/npu_model",
+        loadSidebar: true,
+        subMaxLevel: 2,
+        auto2top: true,
+        homepage: "README.md",
+        search: "auto",
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-c.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-cpp.min.js"></script>
+  </body>
+</html>
