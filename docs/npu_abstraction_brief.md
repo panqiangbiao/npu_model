@@ -1,6 +1,6 @@
 # HarmonyOS 多推理框架 NPU 统一接入方案汇报
 
-> 汇报短版 | 2026-08-31
+> 汇报版 | 2026-08-31
 
 ## 1. 背景
 
@@ -175,4 +175,3 @@ Profiling 和回退原因
 这不是简单增加一层接口包装，而是把分散在各框架中的正确性和性能优化能力收敛到华为统一维护，使第三方框架能够稳定、高效地使用麒麟 NPU。
 
 完整设计见：[HarmonyOS 多推理框架 NPU 统一抽象层设计](harmonyos_multi_framework_npu_abstraction_design.md)。
-
