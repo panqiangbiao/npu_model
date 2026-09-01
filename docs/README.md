@@ -8,6 +8,7 @@
 - [完整设计](npu_abstraction_design.md)：包含现状、目标架构、接口、分图、内存、缓存、调度、可观测性和落地计划。
 - [后摄五后端性能对比](rear_camera_five_backend_comparison.md)：基于同一固定人脸输入，对比原生 NPU、MNN-U0、MNN-U1、CPU 和 GPU，并进一步分析 NPU 与 MNN-U0 的反向顺序复测、阶段耗时和频点差异。
 - [MNN USER_0开发问题总结](mnn_user0_development_issue_summary.md)：总结从错误选择USER_1、BuildIRModel失败、图语义错误，到USER_0正确运行和性能复测的完整问题链路。
+- [手机端自有模型竞品调研](mobile_ai_custom_model_ecosystem_competitor_research.md)：对比华为、Apple、Google/Pixel、vivo、OPPO和小米的自有模型SDK、NPU开放方式、系统模型及主要限制。
 
 ## 核心结论
 

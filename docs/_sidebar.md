@@ -4,3 +4,4 @@
   - [完整设计](npu_abstraction_design.md)
   - [后摄五后端性能对比](rear_camera_five_backend_comparison.md)
   - [MNN USER_0开发问题总结](mnn_user0_development_issue_summary.md)
+  - [手机端自有模型竞品调研](mobile_ai_custom_model_ecosystem_competitor_research.md)
