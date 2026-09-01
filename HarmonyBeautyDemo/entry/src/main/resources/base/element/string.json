@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "实时相机美颜演示"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "美颜实验室"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "美颜实验室"
+    },
+    {
+      "name": "camera_permission_reason",
+      "value": "用于实时预览和美颜效果展示"
+    }
+  ]
+}

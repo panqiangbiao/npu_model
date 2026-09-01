@@ -1,0 +1,30 @@
+# DevEco Studio and build output
+.idea/
+.hvigor/
+**/build/
+**/.cxx/
+oh_modules/
+
+# Local experiments and downloaded source trees
+.tmp-*/
+artifacts/
+tools/mindspore-lite-*/
+third_party/ai_neural_network_runtime/
+third_party/gpupixel/
+third_party/ultra_light_face/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.zip
+__pycache__/
+*.pyc
+
+# Signing material must stay local
+*.p12
+*.pfx
+*.cer
+*.pem
+*.key

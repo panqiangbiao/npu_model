@@ -1,0 +1,7 @@
+{
+  "image": "front_camera_face.jpeg",
+  "previewCrop": [0, 100, 1256, 1775],
+  "expectedFace": [0.18, 0.04, 0.73, 0.74],
+  "minimumConfidence": 0.65,
+  "minimumIou": 0.45
+}

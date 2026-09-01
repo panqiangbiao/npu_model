@@ -10,3 +10,16 @@ GitHub Pages 静态文档站源码。
 https://panqiangbiao.github.io/npu_model/
 ```
 
+## HarmonyBeautyDemo
+
+`HarmonyBeautyDemo/` 是完整的 HarmonyOS 美颜与人脸推理实验工程，支持在界面切换并比较：
+
+- 原生 MindSpore Lite + NNRT NPU；
+- MNN USER_0 + HiAI NPU；
+- MNN USER_1 委托路径；
+- MindSpore Lite CPU；
+- MNN OpenCL GPU。
+
+工程包含 ArkTS 应用代码、Native C++ 推理与渲染代码、MNN/HiAI 运行库、模型资源、离线测试、Trace 分析脚本和性能报告。使用 DevEco Studio 打开 `HarmonyBeautyDemo` 目录即可同步和构建，签名配置需要在本机 DevEco Studio 中生成。
+
+详细说明见 [`HarmonyBeautyDemo/README.md`](HarmonyBeautyDemo/README.md)。
