@@ -1,0 +1,37 @@
+docs/README.md
+  s_0baaf3165ee14c::t_af1b065d33ac4a 11
+docs/_sidebar.md
+  s_0baaf3165ee14c::t_af1b065d33ac4a 7
+docs/mobile_ai_custom_model_ecosystem_competitor_research.md
+  s_0baaf3165ee14c::t_555685605235ff 1-2
+  s_0baaf3165ee14c::t_82dea71df7a7bf 3-197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "3.2.115",
+  "base_commit_sha": "4305123cde68b41a374044dd2602ed16c77e5dbb",
+  "prompts": {
+    "s_0baaf3165ee14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fbae5-2393-70b0-91b5-9a69dd044b43",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "panqiangbiao <panqiangbiao@huawei.com>",
+      "total_additions": 199,
+      "total_deletions": 9,
+      "accepted_lines": 199,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_0baaf3165ee14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fbae5-2393-70b0-91b5-9a69dd044b43",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "panqiangbiao <panqiangbiao@huawei.com>"
+    }
+  }
+}
