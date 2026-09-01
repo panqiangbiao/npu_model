@@ -1,7 +1,7 @@
 # HarmonyOS 多推理框架 NPU 统一抽象层设计
 
 > 文档状态：方案设计稿  
-> 更新时间：2026-08-31  
+> 更新时间：2026-09-01
 > 适用范围：HarmonyOS/Huawei 手机端，MNN、ncnn、LiteRT、ONNX Runtime、MindSpore Lite 等第三方推理框架接入麒麟 NPU
 
 ## 1. 文档目标
@@ -63,18 +63,26 @@ CANN Kit 和麒麟 NPU 驱动
 
 上传和下载总计约 1.20 ms，不足以解释整体差距。主要问题是多个离散 NPU 调用、频繁同步、CPU/NPU 边界和无法整图融合。
 
-`USER_0` 具备整图性能潜力，但当前输出未通过正确性校验：
+`USER_0` 曾经能够完成 BuildIRModel 和NPU执行，但输出未通过正确性校验：
 
 ```text
 预期 bestIndex = 4271，IoU >= 0.95
 实际 bestIndex = 4382，IoU = 0.328
 ```
 
-已暴露的风险包括：
+后续通过固定输入二分定位并修复了三维输出回读、ConvertTensor格式判断、Flatten语义和Softmax轴处理。当前结果为：
+
+```text
+原生NPU与MNN-U0：bestIndex均为4251，IoU均为0.954
+68点最大绝对误差：均为0.00168
+两轮后摄端到端加权均值：NPU 49.64 ms，U0 49.90 ms
+```
+
+该过程暴露的通用风险包括：
 
 - 逻辑二维 Tensor 被补齐成四维物理 Shape 后，Softmax Axis 映射错误。
 - MNN NC4HW4 和 NCHW 不能用普通 Reshape/Permute 等价转换。
-- Boxes 和 Scores 同时偏离，问题不局限于最终 Softmax。
+- Boxes 和 Scores 曾同时偏离，问题不局限于最终 Softmax。
 - 某些等价算子展开能够通过 C++ 编译，却被设备侧 `BuildIRModel` 拒绝。
 - MNN 和 HiAI 对 Shape、Layout、Broadcast、Quantization 的语义缺少统一契约。
 
@@ -222,6 +230,7 @@ Training Model
 6. 支持在线编译、离线模型和编译缓存。
 7. 提供可观测、可解释、可回归的执行链路。
 8. 保持 ABI 稳定，使 Runtime 可以随系统升级而插件不必频繁重编。
+9. 将模型工作负载、业务SLA和阶段反馈转化为可信资源提示，支撑CPU、NPU、DDR、DMA和内存联合调度。
 
 ### 6.2 非目标
 
@@ -408,6 +417,55 @@ HFA_Status HFA_ExecuteAsync(
 
 即使 NNRt 当前只支持同步推理，抽象层也应预留异步接口。早期实现可以在内部线程池包装同步执行，后续再替换成驱动原生异步能力。
 
+#### 资源描述与运行提示
+
+抽象层应预留资源信息接口，但框架插件只提供工作负载事实和业务目标，不直接控制硬件频率：
+
+```cpp
+HFA_Status HFA_RegisterWorkload(
+    HFA_CompiledModel* model,
+    const HFA_WorkloadDescriptor* descriptor);
+
+HFA_Status HFA_CreateRequest(
+    HFA_Execution* execution,
+    const HFA_RequestIntent* intent,
+    HFA_Request** request);
+
+HFA_Status HFA_NotifyPhase(
+    HFA_Request* request,
+    HFA_Phase phase,
+    HFA_PhaseState state,
+    const HFA_PhaseMetrics* metrics);
+
+HFA_Status HFA_ReportExecutionFeedback(
+    HFA_Request* request,
+    const HFA_ExecutionFeedback* feedback);
+```
+
+`HFA_WorkloadDescriptor`至少表达：
+
+```text
+graphId / graphFingerprint
+estimatedOps / estimatedDdrBytes
+weightBytes / peakTensorBytes / workspaceBytes
+inputBytes / outputBytes
+NPU子图数 / CPU fallback数
+计算密集、访存密集或混合型
+可复用Buffer与零拷贝能力
+```
+
+`HFA_RequestIntent`至少表达：
+
+```text
+deadlineUs / periodUs / expectedDurationUs
+foreground / background / priority
+droppable / preemptible / fallbackAllowed
+latency / throughput / power模式
+sequenceId与后续子图预计提交时间
+```
+
+系统Runtime负责校验、限幅和聚合这些提示。应用声明的优先级不能越过系统前后台、权限、温控和公平性策略。
+
 ### 8.3 Huawei Graph IR
 
 统一 IR 是框架语义和 NPU 编译器之间的契约，必须显式表达：
@@ -541,7 +599,7 @@ NPU Subgraph(Conv + ReLU)
 每个框架插件、模型和设备组合必须先通过正确性，再发布性能数据。当前人脸模型可使用：
 
 ```text
-bestIndex = 4271
+bestIndex = 4251
 IoU >= 0.95
 landmark count = 136
 landmark maxError <= 0.04
@@ -670,6 +728,120 @@ Runtime 应向系统资源管理器提交：
 
 系统仍负责最终 NPU、DDR 和 CPU 频率投票。框架插件不得直接控制硬件频率。
 
+### 13.4 资源信息分层
+
+资源预埋分为四层，避免只在推理结束后被动观察利用率：
+
+| 层级 | 信息 | 上报时机 |
+|---|---|---|
+| 图静态特征 | 计算量、权重、Tensor峰值、DDR字节、子图数、fallback、计算/访存类型 | 编译或首次加载 |
+| 请求意图 | deadline、period、优先级、是否可丢帧、前后台、功耗模式 | 每次请求创建 |
+| 阶段事件 | 预处理、上传、排队、执行、回读、后处理 | 阶段开始和结束 |
+| 执行反馈 | 实际耗时、超期、频点、温度、回退和资源等待 | 请求完成 |
+
+建议统一阶段：
+
+```text
+COMPILE / LOAD
+PREPROCESS
+TENSOR_UPLOAD
+NPU_QUEUE
+NPU_EXECUTE
+TENSOR_DOWNLOAD
+POSTPROCESS
+CPU_FALLBACK
+REQUEST_COMPLETE
+```
+
+每个事件使用稳定的 `sessionId + graphId + requestId + sequenceId` 关联，模型名称和Tensor内容不进入系统调度接口。
+
+### 13.5 CPU供给与关键线程
+
+NPU性能不仅取决于NPU频率。CPU预处理、Tensor准备、图提交和完成回调不及时，都会让NPU空等。
+
+框架插件应标记：
+
+```text
+ROLE_PREPROCESS
+ROLE_NPU_SUBMIT
+ROLE_NPU_CALLBACK
+ROLE_POSTPROCESS
+```
+
+系统可以在短关键窗口内选择合适CPU簇、减少线程迁移、提前唤醒或提供受控boost。推理完成后立即撤销，不形成长期高频。
+
+当前Demo中关键点ROI预处理约31 ms，两次NPU模型执行合计约9 ms。第一收益点是预处理阶段的CPU/DDR提前供给和Native化，而不是继续单独拉高NPU频率。
+
+### 13.6 NPU与DDR联合策略
+
+Runtime根据工作负载类型选择不同策略：
+
+| 工作负载 | 推荐策略 |
+|---|---|
+| Cube/MatMul计算密集 | 优先保障NPU计算频率 |
+| 权重或激活访存密集 | 优先保障DDR带宽和内存QoS |
+| 1～2 ms小图 | 避免为短执行无条件升到最高频 |
+| 连续多个NPU子图 | 使用滞回和保持窗口，避免图间反复升降频 |
+| 持续实时推理 | 选择满足deadline的最低稳定频点 |
+| 后台可延迟任务 | 在NPU空闲和热预算充足时执行 |
+
+Face图和Landmark图应通过同一个 `sequenceId` 声明为连续业务请求，并给出下一图预计提交时间。系统据此判断在CPU ROI间隔内保持、降低还是提前恢复NPU/DDR频率。
+
+### 13.7 Deadline与多应用仲裁
+
+多应用并发时，系统资源服务综合：
+
+```text
+deadline
+预计执行时间
+前后台与系统优先级
+是否可丢弃/可抢占
+内存和带宽需求
+温度与功耗预算
+历史执行反馈
+```
+
+可实现：
+
+- 相机预览、视频通话优先于相册后台分类；
+- 已经过期且可丢帧的请求直接取消，只保留最新帧；
+- 短请求可在长任务边界插入；
+- 后台任务限速或迁移到低功耗时段；
+- 防止一个模型通过虚报高优先级长期占用NPU。
+
+### 13.8 内存、DMA与Fallback联动
+
+资源描述应包含Buffer类型、大小、Stride、生命周期、生产者/消费者和CPU可见性。系统可提前分配设备可访问内存、复用DMA Buffer、缓存IOMMU映射，并推动Camera/GPU/NPU共享Buffer。
+
+发生CPU fallback时必须上报算子、原因和预计CPU成本。系统随后调整CPU资源并撤销无效NPU投票，避免一边在CPU执行、一边继续维持NPU高频。
+
+### 13.9 反馈闭环
+
+每次完成后记录：
+
+```text
+预处理、排队、NPU执行和后处理实际耗时
+deadline是否满足
+CPU/NPU/DDR频点与温度
+内存、DMA和fallback情况
+```
+
+系统按 `SoC + graphFingerprint + shapeProfile + powerMode` 建立历史模型：首次使用静态估算，后续使用实机数据修正预计时长和资源投票。
+
+推荐演进：
+
+1. **只观测**：统一字段和Trace，不改变资源决策；
+2. **用户态策略服务**：通过现有QoS机制验证提前供给和联合投票；
+3. **内核闭环**：在数据可信后实现deadline队列、DDR QoS、CPU feeder调度和热约束联合DVFS。
+
+### 13.10 权限与安全边界
+
+- 三方框架只能上报SLA和工作负载信息，不能直接写sysfs或指定最高频；
+- 系统对优先级、持续时间、调用频率和资源预算进行限幅；
+- 调度标识使用哈希ID，不上传模型名称、权重或Tensor内容；
+- 资源提示接口需要版本化并限制高频事件开销；
+- 对虚报deadline、长期占用和异常请求建立统计与降权机制。
+
 ## 14. 回退设计
 
 ### 14.1 回退类型
@@ -712,6 +884,12 @@ HFA/LayoutConvert/N
 HFA/Execute/N
 HFA/Fallback/N
 HFA/WaitFence/N
+HFA/Resource/RegisterGraph
+HFA/Resource/RequestIntent
+HFA/Phase/Preprocess
+HFA/Phase/NpuQueue
+HFA/Phase/NpuExecute
+HFA/Resource/Feedback
 ```
 
 ### 15.2 必须输出的指标
@@ -734,6 +912,10 @@ HFA/WaitFence/N
 - NPU 完成中断数量；
 - CPU 调度和线程占用；
 - DDR/NPU 频点与执行区间关联。
+- 预计与实际计算量、DDR字节和工作区；
+- deadline、period、是否可丢帧和是否超期；
+- CPU关键线程供给、NPU排队和连续图保持窗口；
+- 资源提示是否被系统接受、限幅或拒绝。
 
 #### 业务级
 
@@ -919,19 +1101,22 @@ Input Shape
 
 ## 21. 分阶段落地
 
-### 阶段 0：统一观测，4~6 周
+### 阶段 0：统一观测与资源字段预埋，4~6 周
 
 - 给现有 MNN USER_0/USER_1、NNRt 路径增加统一 Trace。
 - 输出节点命中、子图数量、边界、拷贝和 Layout 转换。
+- 上报graphId、计算/访存类型、Tensor字节、deadline、period和阶段事件，但不改变调度。
 - 建立固定人脸、关键点和小 Transformer Fixture。
 
-交付：能够解释“为什么慢”和“是否真的运行在 NPU”。
+交付：能够解释“为什么慢”“是否真的运行在NPU”以及“各阶段需要什么资源”。
 
 ### 阶段 1：HFA 最小接口，8~12 周
 
 - 定义 Graph IR、Capability、Compile、Execute 和 Profiling C ABI。
+- 定义WorkloadDescriptor、RequestIntent、PhaseEvent和ExecutionFeedback。
 - 先实现静态 Shape、FP16/FP32、同步执行。
 - MNN Plugin 使用 HFA 替代逐卷积 Delegate。
+- 由可信用户态策略服务读取提示，通过现有QoS机制验证CPU提前供给、NPU/DDR联合投票和连续图保持。
 
 交付：人脸/关键点模型正确，稳定态性能接近 MindSpore Lite/NNRt。
 
@@ -943,11 +1128,12 @@ Input Shape
 
 交付：多框架复用同一优化，减少 CPU/NPU 边界和首帧编译时间。
 
-### 阶段 3：异步、动态 Shape 和系统调度，16 周以上
+### 阶段 3：异步、动态 Shape 和内核资源闭环，16 周以上
 
 - 异步执行和 Fence。
 - 多 Shape Profile 和后台编译。
 - 多模型、多应用优先级和资源调度。
+- Deadline感知NPU队列、CPU feeder调度、DDR QoS、DMA/IOMMU复用和热约束联合DVFS。
 - ONNX Runtime EP 和大模型 Chunk 支持。
 
 交付：面向相机、直播、语音和端侧大模型的生产能力。
@@ -979,6 +1165,14 @@ Input Shape
 - 应用不需要直接调用 CANN 驱动接口。
 - 切换 NPU/CPU/GPU 不改变业务模型接口。
 - 一份报告能够解释未下沉算子和性能损失。
+
+### 22.5 资源调度
+
+- 每个请求可关联静态图特征、SLA、阶段事件和实际反馈；
+- 资源提示不允许应用直接指定CPU/NPU/DDR绝对频率；
+- 连续子图场景相比无提示基线减少无效升降频；
+- 在满足deadline前提下，以功耗和温升不劣化为验收条件；
+- fallback发生后能够在同一requestId下看到CPU/NPU资源策略切换。
 
 ## 23. 风险与对策
 
@@ -1031,4 +1225,3 @@ NNRt/CANN 统一负责图编译、缓存、内存、执行和硬件调度。
 - HarmonyOS MindSpore Lite 推理：<https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V13/mindspore-lite-guidelines-V13>
 - Google LiteRT NPU Delegate：<https://ai.google.dev/edge/litert/android/npu>
 - Android NNAPI 迁移指南：<https://developer.android.com/ndk/guides/neuralnetworks/migration-guide>
-
