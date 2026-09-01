@@ -1,0 +1,36 @@
+docs/npu_abstraction_design.md
+  s_0baaf3165ee14c::t_467967adc26665 4,66,73-81,85,233,420-468,602,731-844,887-892,915-918,1104,1108,1111,1116,1119,1131,1136,1169-1176
+docs/npu_abstraction_brief.md
+  s_0baaf3165ee14c::t_e30149aa21f0c1 3,12,131-153,173,180-181,183
+docs/harmonyos_multi_framework_npu_abstraction_design.md
+  s_0baaf3165ee14c::t_467967adc26665 4,66,73-81,85,233,420-468,602,731-844,887-892,915-918,1104,1108,1111,1116,1119,1131,1136,1169-1176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "3.2.115",
+  "base_commit_sha": "695bd60f09afb6db71b592ff1572cbed70c34e51",
+  "prompts": {
+    "s_0baaf3165ee14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fbae5-2393-70b0-91b5-9a69dd044b43",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "panqiangbiao <panqiangbiao@huawei.com>",
+      "total_additions": 433,
+      "total_deletions": 1051,
+      "accepted_lines": 433,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_0baaf3165ee14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fbae5-2393-70b0-91b5-9a69dd044b43",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "panqiangbiao <panqiangbiao@huawei.com>"
+    }
+  }
+}
