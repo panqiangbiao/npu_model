@@ -2,3 +2,4 @@
   - [首页](README.md)
   - [汇报版](npu_abstraction_brief.md)
   - [完整设计](npu_abstraction_design.md)
+  - [后摄五后端性能对比](rear_camera_five_backend_comparison.md)
