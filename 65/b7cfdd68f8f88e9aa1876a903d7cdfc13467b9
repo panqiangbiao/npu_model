@@ -1,0 +1,32 @@
+docs/mobile_ai_custom_model_ecosystem_competitor_research.md
+  s_0baaf3165ee14c::t_ca2b36a6783fc0 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "3.2.115",
+  "base_commit_sha": "65b7cfdd68f8f88e9aa1876a903d7cdfc13467b9",
+  "prompts": {
+    "s_0baaf3165ee14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fbae5-2393-70b0-91b5-9a69dd044b43",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "panqiangbiao <panqiangbiao@huawei.com>",
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_0baaf3165ee14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fbae5-2393-70b0-91b5-9a69dd044b43",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "panqiangbiao <panqiangbiao@huawei.com>"
+    }
+  }
+}
