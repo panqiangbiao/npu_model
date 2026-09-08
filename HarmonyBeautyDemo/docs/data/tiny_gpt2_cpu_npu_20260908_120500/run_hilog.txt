@@ -1,0 +1,27 @@
+09-08 12:05:04.998 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 start model=635484 input=128
+09-08 12:05:05.043 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2_BENCH backend=CPU setup_us=3467.7 warmup=5 runs=50 mean_us=647.8 p50_us=615.9 p95_us=719.4 min_us=598.4 max_us=1631.6 token=5087
+09-08 12:05:05.047 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 CPU token=5087 reference=5087
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2_BENCH backend=MNN_USER0 setup_us=116276.9 warmup=5 runs=50 mean_us=1404.1 p50_us=1349.5 p95_us=1768.4 min_us=1208.0 max_us=1905.5 token=16708
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 stage max_abs embedding=1.077388 block0=1.076448 block1=1.077388
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[0] cpu=0.999995 npu=0.041626
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[1] cpu=-0.999995 npu=-0.032227
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[2] cpu=0.999995 npu=0.022125
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[3] cpu=-0.999995 npu=-0.038025
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[4] cpu=0.999995 npu=0.043732
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[5] cpu=-0.999995 npu=-0.032349
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[6] cpu=-0.999995 npu=-0.016754
+09-08 12:05:05.258 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 embedding[7] cpu=0.999995 npu=-0.020477
+09-08 12:05:05.280 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 OM ready bytes=2260001 cpu=5087 npu=16708 reference=5087
+09-08 12:05:05.281 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE MNN-U0 exported OM bytes=2260001
+09-08 12:05:05.281 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE device id=1085015823912917499 name=NPU_ohos.boot.hardware.Kirin9030S_v2_0 type=3
+09-08 12:05:05.281 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE device id=8987859593747354028 name=HIAI_F type=3
+09-08 12:05:05.282 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE compatibility=0
+09-08 12:05:05.282 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE SetOmOptions code=0 dir=/data/storage/el2/base/haps/entry/files/tiny_gpt2_profile
+09-08 12:05:05.282 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE SetDevice code=0 id=8987859593747354028
+09-08 12:05:05.282 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE SetBandMode code=0
+09-08 12:05:05.282 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE SetModelDeviceOrder code=0
+09-08 12:05:05.283 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE CompilationBuild code=0
+09-08 12:05:05.335 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE input[0] copied bytes=128
+09-08 12:05:05.569 63657 63657 I A0B001/com.example.harmonybeautydemo/CannProfileTest: PQB:CANN_PROFILE CANN Profiling completed with MNN-U0 exported OM: bytes=2260001, inputs=1, outputs=4, runs=50, dir=/data/storage/el2/base/haps/entry/files/tiny_gpt2_profile
+09-08 12:05:05.569 63657 63657 I A0B001/com.example.harmonybeautydemo/TinyGpt2Profile: PQB:TINY_GPT2 benchmark_csv=saved
+09-08 12:05:05.585 63657 63657 W A0B001/com.example.harmonybeautydemo/BeautyDemo: PQB:TINY_GPT2 tiny-gpt2: source=sshleifer/tiny-gpt2, seq=16, MNN=635484 bytes, OM=2260001 bytes, CPU mean/P50/P95=647.8/615.9/719.4 us, NPU mean/P50/P95=1404.1/1349.5/1768.4 us, CPU token=5087, NPU token=16708, reference=5087, correctness=MISMATCH, stage max_abs=1.1/1.1/1.1; CANN Profiling completed with MNN-U0 exported OM: bytes=2260001, inputs=1, outputs=4, runs=50, dir=/data/storage/el2/base/haps/entry/files/tiny_gpt2_profile, benchmark_csv=saved

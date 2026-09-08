@@ -116,11 +116,82 @@ struct Index {
   @State private inferenceStatus: string = '正在检查 NPU';
   @State private staticImageTestRunning: boolean = false;
   @State private staticImageTestCount: number = 0;
+  @State private cannProfilerRunning: boolean = false;
+  @State private tinyLlmProfilerRunning: boolean = false;
+  @State private tinyGpt2ProfilerRunning: boolean = false;
   aboutToDisappear(): void {
     this.stopFaceDetection();
     this.stopStaticImageTest();
     this.cameraController.release();
     beautyPipeline.release();
+  }
+
+  private async runCannProfiler(): Promise<void> {
+    if (this.cannProfilerRunning) return;
+    this.cannProfilerRunning = true;
+    this.inferenceStatus = 'CANN Profiling 正在构图并执行';
+    try {
+      this.stopFaceDetection();
+      this.cameraController.release();
+      await new Promise<void>((resolve: () => void) => setTimeout(resolve, 300));
+      const model = await this.getAbilityContext().resourceManager.getRawFileContent('mnn_user0_face_detector.om');
+      const outputDir = `${this.getAbilityContext().filesDir}/cann_profile`;
+      const result = beautyPipeline.runCannProfiler(model.buffer, outputDir, 20);
+      this.inferenceStatus = result;
+      hilog.warn(DOMAIN, 'BeautyDemo', 'PQB:CANN_PROFILE %{public}s', result);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.inferenceStatus = `CANN Profiling 失败: ${detail}`;
+      hilog.error(DOMAIN, 'BeautyDemo', 'PQB:CANN_PROFILE failed: %{public}s', detail);
+    } finally {
+      this.cannProfilerRunning = false;
+    }
+  }
+
+  private async runTinyLlmProfiler(): Promise<void> {
+    if (this.tinyLlmProfilerRunning) return;
+    this.tinyLlmProfilerRunning = true;
+    this.inferenceStatus = 'Tiny Transformer 正在生成模型并构建 NPU 整图';
+    try {
+      this.stopFaceDetection();
+      this.cameraController.release();
+      await new Promise<void>((resolve: () => void) => setTimeout(resolve, 300));
+      const outputDir = `${this.getAbilityContext().filesDir}/tiny_llm_profile`;
+      const result = beautyPipeline.runTinyLlmProfiling(outputDir, 50);
+      this.inferenceStatus = result;
+      hilog.warn(DOMAIN, 'BeautyDemo', 'PQB:TINY_LLM %{public}s', result);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.inferenceStatus = `Tiny LLM Profiling 失败: ${detail}`;
+      hilog.error(DOMAIN, 'BeautyDemo', 'PQB:TINY_LLM failed: %{public}s', detail);
+    } finally {
+      this.tinyLlmProfilerRunning = false;
+    }
+  }
+
+  private async runTinyGpt2Profiler(): Promise<void> {
+    if (this.tinyGpt2ProfilerRunning) return;
+    this.tinyGpt2ProfilerRunning = true;
+    this.inferenceStatus = 'tiny-gpt2 正在构建 MNN USER_0 整图';
+    try {
+      this.stopFaceDetection();
+      this.cameraController.release();
+      await new Promise<void>((resolve: () => void) => setTimeout(resolve, 300));
+      const model = await this.getAbilityContext().resourceManager
+        .getRawFileContent('tiny_gpt2_prefill_s16.mnn');
+      const inputEmbeddings = await this.getAbilityContext().resourceManager
+        .getRawFileContent('tiny_gpt2_input_embeddings.bin');
+      const outputDir = `${this.getAbilityContext().filesDir}/tiny_gpt2_profile`;
+      const result = beautyPipeline.runTinyGpt2Profiling(model.buffer, inputEmbeddings.buffer, outputDir, 50);
+      this.inferenceStatus = result;
+      hilog.warn(DOMAIN, 'BeautyDemo', 'PQB:TINY_GPT2 %{public}s', result);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.inferenceStatus = `tiny-gpt2 Profiling 失败: ${detail}`;
+      hilog.error(DOMAIN, 'BeautyDemo', 'PQB:TINY_GPT2 failed: %{public}s', detail);
+    } finally {
+      this.tinyGpt2ProfilerRunning = false;
+    }
   }
 
   private createFacePriors(): Array<number> {
@@ -1636,7 +1707,8 @@ struct Index {
       .aspectRatio(4 / 5)
       .backgroundColor('#191B20');
 
-      Column({ space: 8 }) {
+      Scroll() {
+        Column({ space: 8 }) {
         Row() {
           Text('实时调节')
             .fontSize(17)
@@ -1698,6 +1770,63 @@ struct Index {
         }
         .width('100%')
         .height(30);
+
+        Row() {
+          Text('CANN')
+            .width(52)
+            .fontSize(13)
+            .fontColor('#D9DBE0');
+          Button(this.cannProfilerRunning ? '采集中' : '算子 Profiling')
+            .height(30)
+            .fontSize(12)
+            .borderRadius(6)
+            .enabled(!this.cannProfilerRunning)
+            .onClick(() => this.runCannProfiler());
+          Text('NNRT 小模型验证')
+            .fontSize(11)
+            .fontColor('#70747D')
+            .margin({ left: 10 });
+        }
+        .width('100%')
+        .height(34);
+
+        Row() {
+          Text('LLM')
+            .width(52)
+            .fontSize(13)
+            .fontColor('#D9DBE0');
+          Button(this.tinyLlmProfilerRunning ? '采集中' : 'Tiny LLM Profiling')
+            .height(30)
+            .fontSize(12)
+            .borderRadius(6)
+            .enabled(!this.tinyLlmProfilerRunning)
+            .onClick(() => this.runTinyLlmProfiler());
+          Text('Transformer 整图 · 50 次')
+            .fontSize(11)
+            .fontColor('#70747D')
+            .margin({ left: 10 });
+        }
+        .width('100%')
+        .height(34);
+
+        Row() {
+          Text('GPT2')
+            .width(52)
+            .fontSize(13)
+            .fontColor('#D9DBE0');
+          Button(this.tinyGpt2ProfilerRunning ? '采集中' : 'tiny-gpt2 Profiling')
+            .height(30)
+            .fontSize(12)
+            .borderRadius(6)
+            .enabled(!this.tinyGpt2ProfilerRunning)
+            .onClick(() => this.runTinyGpt2Profiler());
+          Text('开源权重 · Prefill S16')
+            .fontSize(11)
+            .fontColor('#70747D')
+            .margin({ left: 10 });
+        }
+        .width('100%')
+        .height(34);
 
         this.presetSelector();
         Row({ space: 12 }) {
@@ -1803,9 +1932,15 @@ struct Index {
         .height(38)
         .enabled(!this.spiderMaskEnabled)
         .opacity(this.spiderMaskEnabled ? 0.32 : 1);
+        }
+        .width('100%')
+        .padding({ left: 18, right: 18, top: 12, bottom: 24 })
       }
+      .layoutWeight(1)
       .width('100%')
-      .padding({ left: 18, right: 18, top: 12, bottom: 14 })
+      .scrollable(ScrollDirection.Vertical)
+      .scrollBar(BarState.Auto)
+      .edgeEffect(EdgeEffect.Spring)
       .backgroundColor('#17191D')
       .border({ width: { top: 1 }, color: '#303239' });
     }

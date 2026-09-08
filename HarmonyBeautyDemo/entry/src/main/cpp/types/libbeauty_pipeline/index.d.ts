@@ -27,6 +27,9 @@ export interface BeautyPipeline {
   setDebugOverlay(enabled: boolean): void;
   setBeautyLuts(gray: ArrayBuffer, origin: ArrayBuffer, skin: ArrayBuffer, light: ArrayBuffer): void;
   getNpuDevices(): string;
+  runCannProfiler(model: ArrayBuffer, outputDir: string, repeatCount: number): string;
+  runTinyLlmProfiling(outputDir: string, repeatCount: number): string;
+  runTinyGpt2Profiling(model: ArrayBuffer, inputEmbeddings: ArrayBuffer, outputDir: string, repeatCount: number): string;
   consumeFaceFrame(): FaceFrame | null;
   initializeGpuInference(faceModel: ArrayBuffer, landmarkModel: ArrayBuffer): string;
   runGpuFace(input: ArrayBuffer): GpuFaceResult;

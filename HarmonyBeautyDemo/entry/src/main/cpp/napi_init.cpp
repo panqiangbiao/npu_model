@@ -11,7 +11,10 @@
 #include <neural_network_runtime/neural_network_core.h>
 
 #include "beauty_renderer.h"
+#include "cann_profile_self_test.h"
 #include "gpu_face_inference.h"
+#include "tiny_llm_profiler.h"
+#include "tiny_gpt2_profiler.h"
 
 namespace {
 std::mutex g_mutex;
@@ -473,6 +476,74 @@ napi_value GetNpuDevices(napi_env env, napi_callback_info info)
     return value;
 }
 
+napi_value RunCannProfiler(napi_env env, napi_callback_info info)
+{
+    size_t argc = 3;
+    napi_value args[3] = { nullptr };
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (argc < 2) {
+        napi_throw_type_error(env, nullptr, "CANN Profiling model and output directory are required");
+        return nullptr;
+    }
+    void *modelData = nullptr;
+    size_t modelSize = 0;
+    if (napi_get_arraybuffer_info(env, args[0], &modelData, &modelSize) != napi_ok || modelData == nullptr) {
+        napi_throw_type_error(env, nullptr, "CANN Profiling model must be an ArrayBuffer");
+        return nullptr;
+    }
+    uint32_t repeatCount = 10;
+    if (argc > 2) napi_get_value_uint32(env, args[2], &repeatCount);
+    const std::string result = RunCannProfileSelfTest(
+        modelData, modelSize, ReadString(env, args[1]), repeatCount);
+    napi_value value = nullptr;
+    napi_create_string_utf8(env, result.c_str(), result.size(), &value);
+    return value;
+}
+
+napi_value RunTinyLlmProfiling(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2] = { nullptr };
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (argc < 1) {
+        napi_throw_type_error(env, nullptr, "Tiny LLM profiling output directory is required");
+        return nullptr;
+    }
+    uint32_t repeatCount = 20;
+    if (argc > 1) napi_get_value_uint32(env, args[1], &repeatCount);
+    const std::string result = RunTinyLlmProfiler(ReadString(env, args[0]), repeatCount);
+    napi_value value = nullptr;
+    napi_create_string_utf8(env, result.c_str(), result.size(), &value);
+    return value;
+}
+
+napi_value RunTinyGpt2Profiling(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value args[4] = { nullptr };
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (argc < 3) {
+        napi_throw_type_error(env, nullptr, "TinyGPT2 model, input_ids and output directory are required");
+        return nullptr;
+    }
+    void *modelData = nullptr;
+    size_t modelSize = 0;
+    void *inputData = nullptr;
+    size_t inputSize = 0;
+    if (napi_get_arraybuffer_info(env, args[0], &modelData, &modelSize) != napi_ok || modelData == nullptr ||
+        napi_get_arraybuffer_info(env, args[1], &inputData, &inputSize) != napi_ok || inputData == nullptr) {
+        napi_throw_type_error(env, nullptr, "TinyGPT2 model and input_ids must be ArrayBuffers");
+        return nullptr;
+    }
+    uint32_t repeatCount = 20;
+    if (argc > 3) napi_get_value_uint32(env, args[3], &repeatCount);
+    const std::string result = RunTinyGpt2Profiler(
+        modelData, modelSize, inputData, inputSize, ReadString(env, args[2]), repeatCount);
+    napi_value value = nullptr;
+    napi_create_string_utf8(env, result.c_str(), result.size(), &value);
+    return value;
+}
+
 napi_value ConsumeFaceFrame(napi_env env, napi_callback_info info)
 {
     std::vector<float> input;
@@ -519,6 +590,9 @@ napi_value Init(napi_env env, napi_value exports)
         { "setDebugOverlay", nullptr, SetDebugOverlay, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "setBeautyLuts", nullptr, SetBeautyLuts, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "getNpuDevices", nullptr, GetNpuDevices, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "runCannProfiler", nullptr, RunCannProfiler, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "runTinyLlmProfiling", nullptr, RunTinyLlmProfiling, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "runTinyGpt2Profiling", nullptr, RunTinyGpt2Profiling, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "consumeFaceFrame", nullptr, ConsumeFaceFrame, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "initializeGpuInference", nullptr, InitializeGpuInference, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "runGpuFace", nullptr, RunGpuFace, nullptr, nullptr, nullptr, napi_default, nullptr },
